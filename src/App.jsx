@@ -161,7 +161,7 @@ function App() {
   return (
     <div className="mandalart-container">
       <h1>만다라트 플래너</h1>
-      <p className="subtitle">중앙에 핵심 목표를 입력하고, 주변에 세부 목표와 실행 계획을 작성하세요</p>
+      <p className="subtitle">중앙에 핵심 목표를 입력하고, 주변에 세부 목표와 실행 계획을 작성하세요💪</p>
 
       <div className="mandalart-grid">
         {cells.map((cell, index) => {
