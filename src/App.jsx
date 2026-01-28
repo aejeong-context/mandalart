@@ -2,6 +2,30 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 
 const STORAGE_KEY = 'mandalart-data'
+const COLOR_STORAGE_KEY = 'mandalart-colors'
+const TITLE_STORAGE_KEY = 'mandalart-title'
+const SUBTITLE_STORAGE_KEY = 'mandalart-subtitle'
+
+const DEFAULT_TITLE = '만다라트 플래너'
+const DEFAULT_SUBTITLE = '중앙에 핵심 목표를 입력하고, 주변에 세부 목표와 실행 계획을 작성하세요💪'
+
+const DEFAULT_COLORS = {
+  mainCenter: '#ff6b6b',
+  centerGrid: '#ffd93d',
+  subCenter: '#6bcb77',
+  background: '#ffffff',
+  gridLine: '#333333',
+  subGrid0: '#e8f4f8',
+  subGrid1: '#fff3e0',
+  subGrid2: '#f3e5f5',
+  subGrid3: '#e0f2f1',
+  subGrid5: '#fce4ec',
+  subGrid6: '#e8eaf6',
+  subGrid7: '#fff8e1',
+  subGrid8: '#e0f7fa',
+  title: '#333333',
+  subtitle: '#666666'
+}
 
 function App() {
   // 9x9 그리드 데이터 초기화 (81개 셀) - localStorage에서 불러오기
@@ -19,6 +43,26 @@ function App() {
 
   const [selectedCell, setSelectedCell] = useState(null)
   const [saveStatus, setSaveStatus] = useState('')
+  const [showColorSettings, setShowColorSettings] = useState(false)
+  const [title, setTitle] = useState(() => {
+    return localStorage.getItem(TITLE_STORAGE_KEY) || DEFAULT_TITLE
+  })
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [subtitle, setSubtitle] = useState(() => {
+    return localStorage.getItem(SUBTITLE_STORAGE_KEY) || DEFAULT_SUBTITLE
+  })
+  const [isEditingSubtitle, setIsEditingSubtitle] = useState(false)
+  const [colors, setColors] = useState(() => {
+    const saved = localStorage.getItem(COLOR_STORAGE_KEY)
+    if (saved) {
+      try {
+        return { ...DEFAULT_COLORS, ...JSON.parse(saved) }
+      } catch {
+        return DEFAULT_COLORS
+      }
+    }
+    return DEFAULT_COLORS
+  })
   const inputRefs = useRef([])
   const isNavigating = useRef(false)
 
@@ -26,6 +70,26 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cells))
   }, [cells])
+
+  // 색상 변경 시 CSS 변수 업데이트 및 저장
+  useEffect(() => {
+    document.documentElement.style.setProperty('--color-main-center', colors.mainCenter)
+    document.documentElement.style.setProperty('--color-center-grid', colors.centerGrid)
+    document.documentElement.style.setProperty('--color-sub-center', colors.subCenter)
+    document.documentElement.style.setProperty('--color-background', colors.background)
+    document.documentElement.style.setProperty('--color-grid-line', colors.gridLine)
+    document.documentElement.style.setProperty('--color-sub-grid-0', colors.subGrid0)
+    document.documentElement.style.setProperty('--color-sub-grid-1', colors.subGrid1)
+    document.documentElement.style.setProperty('--color-sub-grid-2', colors.subGrid2)
+    document.documentElement.style.setProperty('--color-sub-grid-3', colors.subGrid3)
+    document.documentElement.style.setProperty('--color-sub-grid-5', colors.subGrid5)
+    document.documentElement.style.setProperty('--color-sub-grid-6', colors.subGrid6)
+    document.documentElement.style.setProperty('--color-sub-grid-7', colors.subGrid7)
+    document.documentElement.style.setProperty('--color-sub-grid-8', colors.subGrid8)
+    document.documentElement.style.setProperty('--color-title', colors.title)
+    document.documentElement.style.setProperty('--color-subtitle', colors.subtitle)
+    localStorage.setItem(COLOR_STORAGE_KEY, JSON.stringify(colors))
+  }, [colors])
 
   // 수동 저장
   const handleSave = () => {
@@ -37,14 +101,34 @@ function App() {
   // 초기화
   const handleClear = () => {
     if (window.confirm('모든 내용을 삭제하시겠습니까?')) {
-      const emptyCells = Array(81).fill('')
-      setCells(emptyCells)
-      localStorage.removeItem(STORAGE_KEY)
-      // input 요소들도 초기화
-      inputRefs.current.forEach(input => {
-        if (input) input.value = ''
-      })
+      setCells(Array(81).fill(''))
     }
+  }
+
+  // 색상 변경
+  const handleColorChange = (colorKey, value) => {
+    setColors(prev => ({ ...prev, [colorKey]: value }))
+  }
+
+  // 색상 초기화
+  const handleResetColors = () => {
+    setColors(DEFAULT_COLORS)
+  }
+
+  // 제목 변경
+  const handleTitleChange = (newTitle) => {
+    const trimmed = newTitle.trim() || DEFAULT_TITLE
+    setTitle(trimmed)
+    localStorage.setItem(TITLE_STORAGE_KEY, trimmed)
+    setIsEditingTitle(false)
+  }
+
+  // 부제목 변경
+  const handleSubtitleChange = (newSubtitle) => {
+    const trimmed = newSubtitle.trim() || DEFAULT_SUBTITLE
+    setSubtitle(trimmed)
+    localStorage.setItem(SUBTITLE_STORAGE_KEY, trimmed)
+    setIsEditingSubtitle(false)
   }
 
   // 셀 값 변경 핸들러 (blur 시 저장)
@@ -160,8 +244,127 @@ function App() {
 
   return (
     <div className="mandalart-container">
-      <h1>만다라트 플래너</h1>
-      <p className="subtitle">중앙에 핵심 목표를 입력하고, 주변에 세부 목표와 실행 계획을 작성하세요💪</p>
+      <button
+        className="settings-toggle"
+        onClick={() => setShowColorSettings(!showColorSettings)}
+        title="색상 설정"
+      >
+        🎨
+      </button>
+
+      {showColorSettings && (
+        <div className="color-settings-panel">
+          <h3>색상 설정</h3>
+          <div className="color-option">
+            <label>핵심 목표</label>
+            <input
+              type="color"
+              value={colors.mainCenter}
+              onChange={(e) => handleColorChange('mainCenter', e.target.value)}
+            />
+          </div>
+          <div className="color-option">
+            <label>중앙 그리드</label>
+            <input
+              type="color"
+              value={colors.centerGrid}
+              onChange={(e) => handleColorChange('centerGrid', e.target.value)}
+            />
+          </div>
+          <div className="color-option">
+            <label>세부 목표</label>
+            <input
+              type="color"
+              value={colors.subCenter}
+              onChange={(e) => handleColorChange('subCenter', e.target.value)}
+            />
+          </div>
+          <div className="color-option">
+            <label>바탕색</label>
+            <input
+              type="color"
+              value={colors.background}
+              onChange={(e) => handleColorChange('background', e.target.value)}
+            />
+          </div>
+          <div className="color-option">
+            <label>제목</label>
+            <input
+              type="color"
+              value={colors.title}
+              onChange={(e) => handleColorChange('title', e.target.value)}
+            />
+          </div>
+          <div className="color-option">
+            <label>부제목</label>
+            <input
+              type="color"
+              value={colors.subtitle}
+              onChange={(e) => handleColorChange('subtitle', e.target.value)}
+            />
+          </div>
+          <div className="color-option">
+            <label>선 색상</label>
+            <input
+              type="color"
+              value={colors.gridLine}
+              onChange={(e) => handleColorChange('gridLine', e.target.value)}
+            />
+          </div>
+          <div className="color-section-title">실행 계획 칸 (8개 영역)</div>
+          <div className="sub-grid-colors">
+            <input type="color" value={colors.subGrid0} onChange={(e) => handleColorChange('subGrid0', e.target.value)} title="좌상단" />
+            <input type="color" value={colors.subGrid1} onChange={(e) => handleColorChange('subGrid1', e.target.value)} title="상단" />
+            <input type="color" value={colors.subGrid2} onChange={(e) => handleColorChange('subGrid2', e.target.value)} title="우상단" />
+            <input type="color" value={colors.subGrid3} onChange={(e) => handleColorChange('subGrid3', e.target.value)} title="좌측" />
+            <div className="sub-grid-center-placeholder"></div>
+            <input type="color" value={colors.subGrid5} onChange={(e) => handleColorChange('subGrid5', e.target.value)} title="우측" />
+            <input type="color" value={colors.subGrid6} onChange={(e) => handleColorChange('subGrid6', e.target.value)} title="좌하단" />
+            <input type="color" value={colors.subGrid7} onChange={(e) => handleColorChange('subGrid7', e.target.value)} title="하단" />
+            <input type="color" value={colors.subGrid8} onChange={(e) => handleColorChange('subGrid8', e.target.value)} title="우하단" />
+          </div>
+          <button className="reset-colors-btn" onClick={handleResetColors}>
+            기본 색상으로 초기화
+          </button>
+        </div>
+      )}
+
+      {isEditingTitle ? (
+        <input
+          type="text"
+          className="title-input"
+          defaultValue={title}
+          autoFocus
+          onBlur={(e) => handleTitleChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleTitleChange(e.target.value)
+            } else if (e.key === 'Escape') {
+              setIsEditingTitle(false)
+            }
+          }}
+        />
+      ) : (
+        <h1 onClick={() => setIsEditingTitle(true)} className="editable-title">{title}</h1>
+      )}
+      {isEditingSubtitle ? (
+        <input
+          type="text"
+          className="subtitle-input"
+          defaultValue={subtitle}
+          autoFocus
+          onBlur={(e) => handleSubtitleChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSubtitleChange(e.target.value)
+            } else if (e.key === 'Escape') {
+              setIsEditingSubtitle(false)
+            }
+          }}
+        />
+      ) : (
+        <p className="subtitle editable-subtitle" onClick={() => setIsEditingSubtitle(true)}>{subtitle}</p>
+      )}
 
       <div className="mandalart-grid">
         {cells.map((cell, index) => {
@@ -172,7 +375,12 @@ function App() {
               ref={el => inputRefs.current[index] = el}
               type="text"
               className={`cell ${getCellColor(index)} ${selectedCell === index ? 'selected' : ''}`}
-              defaultValue={cell}
+              value={cell}
+              onChange={(e) => {
+                const newCells = [...cells]
+                newCells[index] = e.target.value
+                setCells(newCells)
+              }}
               onBlur={(e) => {
                 if (!isNavigating.current) {
                   handleCellBlur(index, e.target.value)
