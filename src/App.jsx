@@ -65,11 +65,30 @@ function App() {
   })
   const inputRefs = useRef([])
   const isNavigating = useRef(false)
+  const colorPanelRef = useRef(null)
+  const settingsButtonRef = useRef(null)
 
   // 자동 저장 (cells가 변경될 때마다)
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cells))
   }, [cells])
+
+  // 색상 설정 패널 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        showColorSettings &&
+        colorPanelRef.current &&
+        !colorPanelRef.current.contains(e.target) &&
+        settingsButtonRef.current &&
+        !settingsButtonRef.current.contains(e.target)
+      ) {
+        setShowColorSettings(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showColorSettings])
 
   // 색상 변경 시 CSS 변수 업데이트 및 저장
   useEffect(() => {
@@ -102,6 +121,12 @@ function App() {
   const handleClear = () => {
     if (window.confirm('모든 내용을 삭제하시겠습니까?')) {
       setCells(Array(81).fill(''))
+      setTitle(DEFAULT_TITLE)
+      setSubtitle(DEFAULT_SUBTITLE)
+      setColors(DEFAULT_COLORS)
+      localStorage.removeItem(TITLE_STORAGE_KEY)
+      localStorage.removeItem(SUBTITLE_STORAGE_KEY)
+      localStorage.removeItem(COLOR_STORAGE_KEY)
     }
   }
 
@@ -245,6 +270,7 @@ function App() {
   return (
     <div className="mandalart-container">
       <button
+        ref={settingsButtonRef}
         className="settings-toggle"
         onClick={() => setShowColorSettings(!showColorSettings)}
         title="색상 설정"
@@ -253,7 +279,7 @@ function App() {
       </button>
 
       {showColorSettings && (
-        <div className="color-settings-panel">
+        <div className="color-settings-panel" ref={colorPanelRef}>
           <h3>색상 설정</h3>
           <div className="color-option">
             <label>핵심 목표</label>
