@@ -14,6 +14,7 @@
   --color-sub-grid-8: #e0f7fa;
   --color-title: #333333;
   --color-subtitle: #666666;
+  --color-cell-text: #333333;
 }
 
 .mandalart-container {
@@ -110,6 +111,7 @@ h1.editable-title:hover {
   box-sizing: border-box;
   transition: all 0.2s ease;
   outline: none;
+  color: var(--color-cell-text);
 }
 
 .cell:focus {

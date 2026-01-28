@@ -24,7 +24,8 @@ const DEFAULT_COLORS = {
   subGrid7: '#fff8e1',
   subGrid8: '#e0f7fa',
   title: '#333333',
-  subtitle: '#666666'
+  subtitle: '#666666',
+  cellText: '#333333'
 }
 
 function App() {
@@ -107,6 +108,7 @@ function App() {
     document.documentElement.style.setProperty('--color-sub-grid-8', colors.subGrid8)
     document.documentElement.style.setProperty('--color-title', colors.title)
     document.documentElement.style.setProperty('--color-subtitle', colors.subtitle)
+    document.documentElement.style.setProperty('--color-cell-text', colors.cellText)
     localStorage.setItem(COLOR_STORAGE_KEY, JSON.stringify(colors))
   }, [colors])
 
@@ -335,6 +337,14 @@ function App() {
               type="color"
               value={colors.gridLine}
               onChange={(e) => handleColorChange('gridLine', e.target.value)}
+            />
+          </div>
+          <div className="color-option">
+            <label>텍스트 색상</label>
+            <input
+              type="color"
+              value={colors.cellText}
+              onChange={(e) => handleColorChange('cellText', e.target.value)}
             />
           </div>
           <div className="color-section-title">실행 계획 칸 (8개 영역)</div>
